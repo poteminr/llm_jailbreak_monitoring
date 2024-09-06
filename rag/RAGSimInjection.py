@@ -26,7 +26,7 @@ class RAGSimInjection:
                            ) -> tuple[list[str], list[float]]:
         """
         Embeds a new query and returns top k scores and prompts from embeddings.
-        :param input: string of user input
+        :param query: string of user input
         :param k: number of returned prompts
         :return: tuple that contains list of prompts and list of similarity scores
         """
