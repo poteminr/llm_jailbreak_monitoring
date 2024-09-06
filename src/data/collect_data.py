@@ -4,6 +4,7 @@ from typing import Dict, List, Union
 
 import click
 from datasets import Dataset
+from dotenv import load_dotenv
 from github import Auth, Github
 
 from processer import DataProcesser, NotFoundDataError
@@ -49,7 +50,7 @@ def create_huggingface_dataset(
 
 @click.command()
 @click.option("--output_path", type=click.STRING)
-@click.optin("--local_dataset_path", type=click.STRING)
+@click.option("--local_dataset_path", type=click.STRING)
 @click.option("--hf_dataset_path", type=click.STRING)
 def collect(output_path: str, local_dataset_path: str, hf_dataset_path: str) -> None:
     all_data = []
@@ -62,13 +63,20 @@ def collect(output_path: str, local_dataset_path: str, hf_dataset_path: str) -> 
             all_data = json.load(f)
         all_data = all_data["data"]
     else:
-        with open("git_repos.json", "r") as f:
+        with open("configs/git_repos.json", "r") as f:
             git_repos = json.load(f)
 
         for git_repo in git_repos["repos"]:
-            all_data += collect_recursively_from_github(
+            data_chunk = collect_recursively_from_github(
                 g, git_repo["repo_path"], git_repo["initial_path"], data_processer
             )
+
+            def verify_item(item: Dict[str, Union[str, bool]]) -> bool:
+                if (not item.get("prompt", None)) or (not item["jailbreak"]):
+                    return False
+                return True
+
+            all_data += [item for item in data_chunk if verify_item(item)]
 
         with open(output_path, "w") as f:
             json.dump({"data": all_data}, f)
@@ -78,4 +86,5 @@ def collect(output_path: str, local_dataset_path: str, hf_dataset_path: str) -> 
 
 
 if __name__ == "__main__":
+    load_dotenv()
     collect()

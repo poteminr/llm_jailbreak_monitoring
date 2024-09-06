@@ -19,10 +19,11 @@ class DataProcesser:
         self.sherdencooper = "sherdencooper/GPTFuzz"
         self.tml_epfl = "tml-epfl/llm-adaptive-attacks"
 
+        self.input_field = "prompt"
         self.target_field = "jailbreak"
         self.verazuo_fields = ["prompt", "jailbreak"]
         self.jailbreakbench_fields = ["prompt", "jailbroken"]
-        self.sherdencooper_fields = ["text"]
+        self.sherdencooper_field = "text"
 
     def _encode_field(self, key: str) -> str:
         if key == "jailbroken":
@@ -33,8 +34,9 @@ class DataProcesser:
         self, content_file: ContentFile
     ) -> List[Dict[str, Union[str, bool]]]:
         df = pd.read_csv(content_file.download_url)
-        df = df[self.sherdencooper_fields]
+        df[self.input_field] = df[self.sherdencooper_field]
         df[self.target_field] = np.ones(df.shape[0]).astype(bool)
+        df = df.drop(self.sherdencooper_field, axis=1)
         return df.to_dict(orient="records")
 
     def _process_verazuo_filedata(
