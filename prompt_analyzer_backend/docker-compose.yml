@@ -1,0 +1,36 @@
+version: "3.8"
+
+services:
+  db:
+    image: timescale/timescaledb:latest-pg13
+    environment:
+      POSTGRES_USER: username
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: mydatabase
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+  fastapi:
+    build: ./fastapi_app
+    depends_on:
+      - db  # FastAPI зависит от PostgreSQL
+    environment:
+      DATABASE_URL: postgresql+asyncpg://username:password@db:5432/mydatabase
+    ports:
+      - "8000:8000"
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    restart: always
+
+volumes:
+  db-data:
+  grafana-data:
