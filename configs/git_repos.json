@@ -1,0 +1,20 @@
+{
+    "repos": [
+        {
+            "repo_path": "verazuo/jailbreak_llms",
+            "initial_path": "data/prompts"
+        },
+        {
+            "repo_path": "sherdencooper/GPTFuzz",
+            "initial_path": "datasets/prompts"
+        },
+        {
+            "repo_path": "JailbreakBench/artifacts",
+            "initial_path": "attack-artifacts"
+        },
+        {
+            "repo_path": "tml-epfl/llm-adaptive-attacks",
+            "initial_path": "jailbreak_artifacts"
+        }
+    ]
+}
