@@ -31,6 +31,22 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=admin
     restart: always
 
+  monitoring:
+    build: ./monitoring
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgresql+asyncpg://username:password@db:5432/mydatabase
+    ports:
+      - "4096:4096"
+
+  prometheus:
+    image: prom/prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yaml:/etc/prometheus/prometheus.yml
+
 volumes:
   db-data:
   grafana-data:
