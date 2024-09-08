@@ -4,7 +4,7 @@ from detectors.input_checker.utils import LLM_GUARD_MODEL_PROMPT
 from detectors.input_checker.base_guard_model import BaseGuardModel
 
 
-class InputDetecor:
+class InputDetector:
     def __init__(
         self,
         base_guard_model_name: str = "meta-llama/Prompt-Guard-86M",
@@ -32,8 +32,8 @@ class InputDetecor:
 class InputChecker:
     def __init__(
         self,
+        input_detector: Optional[InputDetector] = None,
         find_sim_injection: Optional[Callable[[str, int], tuple[list[str], list[float]]]] = None,
-        input_detector: Optional[InputDetecor] = None,
         base_guard_model_name: Optional[str] = None,
         llm_guard_model_name: Optional[str] = None,
         base_guard_model_score_threshold: float = 0.75,
@@ -44,9 +44,9 @@ class InputChecker:
         self.find_sim_injection = find_sim_injection
     
         if base_guard_model_name is not None and llm_guard_model_name is not None:
-            self.input_detector = InputDetecor(base_guard_model_name, llm_guard_model_name)
+            self.input_detector = InputDetector(base_guard_model_name, llm_guard_model_name)
         else:
-            self.input_detector = input_detector if input_detector is not None else InputDetecor()
+            self.input_detector = input_detector if input_detector is not None else InputDetector()
     
         self.base_guard_model_score_threshold = base_guard_model_score_threshold
         self.base_guard_model_scores_spread_threshold = base_guard_model_scores_spread_threshold
