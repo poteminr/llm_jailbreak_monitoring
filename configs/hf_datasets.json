@@ -1,0 +1,18 @@
+{
+    "datasets": [
+        {
+            "dataset_path": "unalignment/toxic-dpo-v0.2",
+            "prompt_field": "prompt",
+            "output_field": "chosen",
+            "label_field": null,
+            "jailbreak_field": null
+        },
+        {
+            "dataset_path": "unalignment/toxic-dpo-v0.1",
+            "prompt_field": "prompt",
+            "output_field": "chosen",
+            "label_field": null,
+            "jailbreak_field": null
+        }
+    ]
+}
