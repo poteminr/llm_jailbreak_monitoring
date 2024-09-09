@@ -12,7 +12,7 @@ class NotFoundDataError(Exception):
     pass
 
 
-class DataProcesser:
+class GitDataProcesser:
     def __init__(self) -> None:
         self.verazuo = "verazuo/jailbreak_llms"
         self.jailbreakbench = "JailbreakBench/artifacts"

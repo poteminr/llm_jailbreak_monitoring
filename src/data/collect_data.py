@@ -7,33 +7,30 @@ from datasets import Dataset
 from dotenv import load_dotenv
 from github import Auth, Github
 
-from processer import DataProcesser, NotFoundDataError
+from processer import GitDataProcesser, NotFoundDataError
 
 
 def collect_recursively_from_github(
-    g: Github, repo_path: str, initial_path: str, data_processer: DataProcesser
+    g: Github, repo_path: str, initial_path: str, data_processer: GitDataProcesser
 ) -> List[Dict[str, Union[str, bool]]]:
     repo = g.get_repo(repo_path)
     contents = repo.get_contents(initial_path)
     data = []
 
-    def check_extentions(download_url: str) -> bool:
-        ext = download_url.split(".")[-1]
-        if ext in ["csv", "json"]:
-            return True
-        return False
+    def is_valid_extension(download_url: str) -> bool:
+        return download_url.split(".")[-1] in {"csv", "json"}
 
     while contents:
-        conent_file = contents.pop(0)
-        if conent_file.type == "dir":
-            contents.extend(repo.get_contents(conent_file.path))
-        else:
-            if check_extentions(conent_file.download_url):
-                try:
-                    print(f"Try to process {conent_file.download_url} data")
-                    data += data_processer.process_filedata(repo_path, conent_file)
-                except NotFoundDataError:
-                    continue
+        content_file = contents.pop(0)
+        if content_file.type == "dir":
+            contents.extend(repo.get_contents(content_file.path))
+        elif is_valid_extension(content_file.download_url):
+            try:
+                print(f"Processing {content_file.download_url}")
+                data.extend(data_processer.process_filedata(repo_path, content_file))
+            except NotFoundDataError:
+                print(f"Data not found for {content_file.download_url}")
+
     return data
 
 
@@ -56,12 +53,11 @@ def collect(output_path: str, local_dataset_path: str, hf_dataset_path: str) -> 
     all_data = []
     auth = Auth.Token(os.getenv("GITHUB_TOKEN"))
     g = Github(auth=auth)
-    data_processer = DataProcesser()
+    data_processer = GitDataProcesser()
 
     if os.path.exists(output_path):
         with open(output_path, "r") as f:
-            all_data = json.load(f)
-        all_data = all_data["data"]
+            all_data = json.load(f)["data"]
     else:
         with open("configs/git_repos.json", "r") as f:
             git_repos = json.load(f)
@@ -72,11 +68,9 @@ def collect(output_path: str, local_dataset_path: str, hf_dataset_path: str) -> 
             )
 
             def verify_item(item: Dict[str, Union[str, bool]]) -> bool:
-                if (not item.get("prompt", None)) or (not item["jailbreak"]):
-                    return False
-                return True
+                return bool(item.get("prompt")) and item["jailbreak"]
 
-            all_data += [item for item in data_chunk if verify_item(item)]
+            all_data.extend([item for item in data_chunk if verify_item(item)])
 
         with open(output_path, "w") as f:
             json.dump({"data": all_data}, f)
