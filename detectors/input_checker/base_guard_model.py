@@ -1,25 +1,23 @@
-from typing import Optional
+from typing import Optional, Union
 import torch
 from torch.nn.functional import softmax
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
 
 class BaseGuardModel:
-    def __init__(self, model_name: str, device: str = "cpu") -> None:
+    def __init__(self, model_name: str = "meta-llama/Prompt-Guard-86M", device: str = "cpu") -> None:
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         self.model = AutoModelForSequenceClassification.from_pretrained(model_name).to(device)
         self.device = device
         
-    def get_class_probabilities(self, text: str, temperature: float = 1.0):
+    def get_class_probabilities(self, text: Union[list[str], str], temperature: float = 1.0) -> torch.Tensor:
         """
         Evaluate the model on the given text with temperature-adjusted softmax.
         Note, as this is a DeBERTa model, the input text should have a maximum length of 512.
         
         Args:
-            text (str): The input text to classify.
-            temperature (float): The temperature for the softmax function. Default is 1.0.
-            device (str): The device to evaluate the model on.
-            
+            text (Union[list[str], str]): The input text to classify.
+            temperature (float): The temperature for the softmax function. Default is 1.0.            
         Returns:
             torch.Tensor: The probability of each class adjusted by the temperature.
         """
@@ -34,37 +32,49 @@ class BaseGuardModel:
         probabilities = softmax(scaled_logits, dim=-1)
         return probabilities
 
-    def get_jailbreak_score(self, text: str, temperature: float = 1.0):
+    def get_jailbreak_score(
+        self,
+        text: Union[list[str], str],
+        temperature: float = 1.0
+    ) -> Union[list[float], float]:
         """
         Evaluate the probability that a given string contains malicious jailbreak or prompt injection.
         Appropriate for filtering dialogue between a user and an LLM.
         
         Args:
-            text (str): The input text to evaluate.
-            temperature (float): The temperature for the softmax function. Default is 1.0.
-            device (str): The device to evaluate the model on.
-            
+            text (Union[list[str], str]): The input text to evaluate.
+            temperature (float): The temperature for the softmax function. Default is 1.0.   
+                     
         Returns:
-            float: The probability of the text containing malicious content.
+            Union[list[float], float]: The probability of the text containing malicious content.
         """
         probabilities = self.get_class_probabilities(text, temperature)
-        return probabilities[0, 2].item()
+        if len(probabilities) > 1:
+            return probabilities[:, 2].tolist()
+        else:
+            return probabilities[0, 2].item()
 
-    def get_indirect_injection_score(self, text: str, temperature: float = 1.0):
+    def get_indirect_injection_score(
+        self,
+        text: Union[list[str], str],
+        temperature: float = 1.0
+    ) -> Union[list[float], float]:
         """
         Evaluate the probability that a given string contains any embedded instructions (malicious or benign).
         Appropriate for filtering third party inputs (e.g., web searches, tool outputs) into an LLM.
         
         Args:
-            text (str): The input text to evaluate.
+            text (Union[list[str], str]): The input text to evaluate.
             temperature (float): The temperature for the softmax function. Default is 1.0.
-            device (str): The device to evaluate the model on.
             
         Returns:
-            float: The combined probability of the text containing malicious or embedded instructions.
+            Union[list[float], float]: The combined probability of the text containing malicious or embedded instructions.
         """
         probabilities = self.get_class_probabilities(text, temperature)
-        return (probabilities[0, 1] + probabilities[0, 2]).item()
+        if len(probabilities) > 1:
+            return (probabilities[:, 1] + probabilities[:, 2]).tolist()
+        else:
+            return (probabilities[0, 1] + probabilities[0, 2]).item()
     
     def preprocess_text_for_promptguard(self, text: str) -> str:
         """
@@ -103,8 +113,20 @@ class BaseGuardModel:
         except Exception:
             return text
         
-    def get_prompt_scores(self, text: str) -> tuple[float, float]:
+    def get_prompt_scores(
+        self,
+        text: Union[list[str], str]
+    ) -> Union[tuple[float, float], tuple[list[float], list[float]]]:
+        if not isinstance(text, str):
+            return self.get_prompt_scores_batched(text)
+        
         original_score = self.get_indirect_injection_score(text)
         preprocessed_text_score = self.get_indirect_injection_score(self.preprocess_text_for_promptguard(text)) 
         return original_score, preprocessed_text_score
+    
+    def get_prompt_scores_batched(self, texts: list[str]) -> tuple[list[float], list[float]]:
+        original_scores = self.get_indirect_injection_score(texts)
+        preprocessed_text = [self.preprocess_text_for_promptguard(text) for text in texts]
+        preprocessed_text_scores = self.get_indirect_injection_score(preprocessed_text)
+        return original_scores, preprocessed_text_scores
         

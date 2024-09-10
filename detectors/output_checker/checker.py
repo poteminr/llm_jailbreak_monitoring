@@ -1,6 +1,7 @@
 from typing import Optional
 import ollama
 
+
 class OutputDetector:
     def __init__(self, llm_guard_model_name: str = "xe/llamaguard3") -> None:
         self.llm_guard_model_name = llm_guard_model_name
