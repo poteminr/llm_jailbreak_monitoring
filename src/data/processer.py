@@ -31,13 +31,20 @@ class GitDataProcesser:
             return self.target_field
         return key
 
+    def _encode_value(self, value: Union[str, bool]) -> Union[str, int]:
+        if isinstance(value, bool):
+            return int(value)
+        return value
+
     def _process_sherdencooper_filedata(
         self, content_file: ContentFile
     ) -> List[Dict[str, Union[str, bool]]]:
         df = pd.read_csv(content_file.download_url)
         df[self.input_field] = df[self.sherdencooper_field]
-        df[self.target_field] = np.ones(df.shape[0]).astype(bool)
+        df[self.target_field] = np.ones(df.shape[0], dtype=np.int64)
         df = df.drop(self.sherdencooper_field, axis=1)
+        if "id" in df.columns:
+            df = df.drop(["id"], axis=1)
         return df.to_dict(orient="records")
 
     def _process_verazuo_filedata(
@@ -54,6 +61,7 @@ class GitDataProcesser:
             else:
                 print(f"Failed to download the file: {response.status_code}")
         df = df[self.verazuo_fields]
+        df[self.target_field] = df[self.target_field].astype(int)
         return df.to_dict(orient="records")
 
     def _process_jailbreakbench_filedata(
@@ -64,7 +72,7 @@ class GitDataProcesser:
         if jailbreak_data:
             data = [
                 {
-                    self._encode_field(k): v
+                    self._encode_field(k): self._encode_value(v)
                     for k, v in jailbreak_item.items()
                     if k in self.jailbreakbench_fields
                 }
@@ -101,7 +109,7 @@ class HfDataProcesser:
         self.rubend18 = "rubend18/ChatGPT-Jailbreak-Prompts"
         self.hackaprompt = "hackaprompt/hackaprompt-dataset"
 
-    def is_jailbreak(self, dataset_path: str, value: Any) -> bool:
+    def transform_jailbreak_field(self, dataset_path: str, value: Any) -> int:
         """
         Check if the value is a jailbreak.
 
@@ -109,12 +117,13 @@ class HfDataProcesser:
         :param value: Value to check.
         :return: True if the value is a jailbreak, False otherwise.
         """
+
         match dataset_path:
             case self.lmsys:
-                return bool(value)
+                return int(value)
             case self.rubend18:
-                return value > 0
+                return int(value > 0)
             case self.hackaprompt:
-                return value
+                return int(value)
             case _:
                 raise ValueError(f"Unknown dataset path: {dataset_path}")
