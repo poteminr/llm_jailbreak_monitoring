@@ -54,9 +54,12 @@ def merge_data(
             if jailbreak_field in split_dataset.column_names:
                 # Обработка jailbreak запросов
 
-                def cast_to_int(item: Dict[str, Any]) -> Dict[str, Any]:
+                def cast_item(item: Dict[str, Any]) -> Dict[str, Any]:
                     item[jailbreak_field] = hf_processer.transform_jailbreak_field(
                         dataset_path, item[jailbreak_field]
+                    )
+                    item[hf_processer.source_field] = (
+                        hf_processer.hf_url_template.format(dataset_path)
                     )
                     return item
 
@@ -67,9 +70,7 @@ def merge_data(
                         )
                     )
                 )
-                jailbreak_dataset = jailbreak_dataset.map(
-                    lambda item: cast_to_int(item)
-                )
+                jailbreak_dataset = jailbreak_dataset.map(lambda item: cast_item(item))
                 jailbreak_dataset = remove_columns(
                     jailbreak_dataset, [input_field, jailbreak_field]
                 )
