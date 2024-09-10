@@ -42,6 +42,7 @@ def merge_data(
         label_field = hf_dataset["label_field"]
         jailbreak_field = hf_dataset["jailbreak_field"]
         dataset_name = hf_dataset["dataset_name"]
+        need_filter = hf_dataset["need_filter"]
         dataset = datasets.load_dataset(dataset_path, name=dataset_name)
 
         for split in dataset.keys():
@@ -53,6 +54,7 @@ def merge_data(
 
             if jailbreak_field in split_dataset.column_names:
                 # Обработка jailbreak запросов
+                jailbreak_dataset = split_dataset
 
                 def cast_item(item: Dict[str, Any]) -> Dict[str, Any]:
                     item[jailbreak_field] = hf_processer.transform_jailbreak_field(
@@ -63,16 +65,22 @@ def merge_data(
                     )
                     return item
 
-                jailbreak_dataset = split_dataset.filter(
-                    lambda item: bool(
-                        hf_processer.transform_jailbreak_field(
-                            dataset_path, item[jailbreak_field]
+                if need_filter:
+                    jailbreak_dataset = jailbreak_dataset.filter(
+                        lambda item: bool(
+                            hf_processer.transform_jailbreak_field(
+                                dataset_path, item[jailbreak_field]
+                            )
                         )
                     )
-                )
                 jailbreak_dataset = jailbreak_dataset.map(lambda item: cast_item(item))
                 jailbreak_dataset = remove_columns(
-                    jailbreak_dataset, [input_field, jailbreak_field]
+                    jailbreak_dataset,
+                    [
+                        input_field,
+                        jailbreak_field,
+                        hf_processer.source_field,
+                    ],
                 )
                 jailbreak_dataset = rename_columns(
                     jailbreak_dataset,
