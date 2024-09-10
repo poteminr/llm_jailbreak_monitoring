@@ -9,9 +9,10 @@ class InputDetector:
         self,
         base_guard_model_name: str = "meta-llama/Prompt-Guard-86M",
         llm_guard_model_name: str = "llama3.1",
-        llm_guard_model_prompt_template: str = LLM_GUARD_MODEL_PROMPT
+        llm_guard_model_prompt_template: str = LLM_GUARD_MODEL_PROMPT,
+        device: str = "cpu"
     ) -> None:
-        self.base_guard_model = BaseGuardModel(base_guard_model_name)
+        self.base_guard_model = BaseGuardModel(base_guard_model_name, device)
         self.llm_guard_model_name = llm_guard_model_name
         self.llm_guard_model_prompt_template = llm_guard_model_prompt_template
     
@@ -39,14 +40,15 @@ class InputChecker:
         base_guard_model_score_threshold: float = 0.75,
         base_guard_model_scores_spread_threshold: float = 0.5,
         injection_search_similarity_threshold: float = 0.8,
-        policy: Literal["simple", 'base', 'hard'] = 'base'
+        policy: Literal["simple", 'base', 'hard'] = 'base',
+        device: str = 'cpu'
     ) -> None:
         self.find_sim_injection = find_sim_injection
     
         if base_guard_model_name is not None and llm_guard_model_name is not None:
-            self.input_detector = InputDetector(base_guard_model_name, llm_guard_model_name)
+            self.input_detector = InputDetector(base_guard_model_name, llm_guard_model_name, device=device)
         else:
-            self.input_detector = input_detector if input_detector is not None else InputDetector()
+            self.input_detector = input_detector if input_detector is not None else InputDetector(device=device)
     
         self.base_guard_model_score_threshold = base_guard_model_score_threshold
         self.base_guard_model_scores_spread_threshold = base_guard_model_scores_spread_threshold
