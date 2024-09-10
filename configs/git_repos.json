@@ -15,6 +15,10 @@
         {
             "repo_path": "tml-epfl/llm-adaptive-attacks",
             "initial_path": "jailbreak_artifacts"
+        },
+        {
+            "repo_path": "protectai/llm-guard/tree/399cb2eea70afc78482db226253ddd1d85f296e3",
+            "initial_path": "llm_guard/resources/jailbreak.json"
         }
     ]
 }
