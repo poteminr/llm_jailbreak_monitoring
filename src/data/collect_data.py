@@ -3,10 +3,10 @@ import os
 from typing import Dict, List, Union
 
 import click
-from datasets import Dataset
 from dotenv import load_dotenv
 from github import Auth, Github
 
+from data.utils import process_dataset
 from processer import GitDataProcesser, NotFoundDataError
 
 
@@ -34,22 +34,18 @@ def collect_recursively_from_github(
     return data
 
 
-def create_huggingface_dataset(
-    data: List[Dict[str, Union[str, bool]]],
-    local_dataset_path: str,
-    hf_dataset_path: str,
-) -> None:
-    dataset = Dataset.from_list(data)
-    dataset.save_to_disk(local_dataset_path)
-    dataset.push_to_hub(repo_id=hf_dataset_path, private=True)
-    return None
-
-
 @click.command()
 @click.option("--output_path", type=click.STRING)
 @click.option("--local_dataset_path", type=click.STRING)
 @click.option("--hf_dataset_path", type=click.STRING)
 def collect(output_path: str, local_dataset_path: str, hf_dataset_path: str) -> None:
+    """
+    Collect data from GitHub repositories and save it to a local dataset and push it to Hugging Face.
+
+    :param output_path: Path to save the output dataset.
+    :param local_dataset_path: Path to save the local dataset.
+    :param hf_dataset_path: Path to push the dataset to Hugging Face.
+    """
     all_data = []
     auth = Auth.Token(os.getenv("GITHUB_TOKEN"))
     g = Github(auth=auth)
@@ -75,7 +71,7 @@ def collect(output_path: str, local_dataset_path: str, hf_dataset_path: str) -> 
         with open(output_path, "w") as f:
             json.dump({"data": all_data}, f)
 
-    create_huggingface_dataset(all_data, local_dataset_path, hf_dataset_path)
+    process_dataset(all_data, local_dataset_path, hf_dataset_path)
     return None
 
 
