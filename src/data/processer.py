@@ -1,5 +1,5 @@
 import json
-from typing import Dict, List, Union
+from typing import Any, Dict, List, Union
 import urllib
 
 from github import ContentFile
@@ -76,6 +76,13 @@ class GitDataProcesser:
     def process_filedata(
         self, source_repo: str, content_file: ContentFile
     ) -> List[Dict[str, Union[bool, str]]]:
+        """
+        Process the data from the given content file.
+
+        :param source_repo: Path to the repository containing the data.
+        :param content_file: Content file to process.
+        :return: List of processed data.
+        """
         match source_repo:
             case self.verazuo:
                 return self._process_verazuo_filedata(content_file)
@@ -85,3 +92,28 @@ class GitDataProcesser:
                 return self._process_sherdencooper_filedata(content_file)
             case self.tml_epfl:
                 return self._process_jailbreakbench_filedata(content_file)
+
+
+class HfDataProcesser:
+    def __init__(self) -> None:
+        self.lmsys = "lmsys/toxic-chat"
+        self.rubend18 = "rubend18/ChatGPT-Jailbreak-Prompts"
+        self.hackaprompt = "hackaprompt/hackaprompt-dataset"
+
+    def is_jailbreak(self, dataset_path: str, value: Any) -> bool:
+        """
+        Check if the value is a jailbreak.
+
+        :param dataset_path: Path to the dataset.
+        :param value: Value to check.
+        :return: True if the value is a jailbreak, False otherwise.
+        """
+        match dataset_path:
+            case self.lmsys:
+                return bool(value)
+            case self.rubend18:
+                return value > 0
+            case self.hackaprompt:
+                return value
+            case _:
+                raise ValueError(f"Unknown dataset path: {dataset_path}")
