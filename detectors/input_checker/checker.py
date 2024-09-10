@@ -1,4 +1,4 @@
-from typing import Callable, Literal, Optional
+from typing import Callable, Literal, Optional, Union
 import ollama
 from detectors.input_checker.utils import LLM_GUARD_MODEL_PROMPT
 from detectors.input_checker.base_guard_model import BaseGuardModel
@@ -89,8 +89,8 @@ class InputChecker:
         rag_context = "\n".join(search_results[0])
         llm_guard_output = self.input_detector.generate_llm_injection_model(input_text, rag_context)
         return 0, False # TODO: parse output of llm guard model
-            
-    def check_input(self, input_text: str, top_k: int = 1) -> tuple[float, bool]:
+        
+    def _check_input_one_sample(self, input_text: str, top_k: int = 1) -> tuple[float, bool]:
         base_guard_model_label = self.get_base_guard_model_label(input_text)
         if self.policy == 'simple' or base_guard_model_label[1] or self.find_sim_injection is None:
             return base_guard_model_label
@@ -101,4 +101,18 @@ class InputChecker:
         
         llm_guard_model_label = self.get_llm_guard_model_label(input_text, search_similarity_label[2], top_k)
         return llm_guard_model_label
-        
+    
+    def check_input(
+        self,
+        input_text: Union[list[str], str],
+        top_k: int = 1
+    ) -> Union[tuple[float, bool], tuple[list[float], list[bool]]]:
+        if isinstance(input_text, str):
+            return self._check_input_one_sample(input_text, top_k)
+        else:
+            scores, labels = [], []
+            for text in input_text:
+                score, label = self._check_input_one_sample(text, top_k)
+                scores.append(score)
+                labels.append(label)
+            return scores, labels
