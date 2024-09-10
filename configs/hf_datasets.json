@@ -5,35 +5,40 @@
             "prompt_field": "prompt",
             "output_field": "chosen",
             "label_field": null,
-            "jailbreak_field": null
+            "jailbreak_field": null,
+            "dataset_name": null
         },
         {
             "dataset_path": "unalignment/toxic-dpo-v0.1",
             "prompt_field": "prompt",
             "output_field": "chosen",
             "label_field": null,
-            "jailbreak_field": null
+            "jailbreak_field": null,
+            "dataset_name": null
         },
         {
             "dataset_path": "lmsys/toxic-chat",
-            "prompt_field": "prompt",
+            "prompt_field": "user_input",
             "output_field": null,
             "label_field": null,
-            "jailbreak_field": "jailbreaking"
+            "jailbreak_field": "jailbreaking",
+            "dataset_name": "toxicchat0124"
         },
         {
             "dataset_path": "rubend18/ChatGPT-Jailbreak-Prompts",
-            "prompt_field": "prompt",
+            "prompt_field": "Prompt",
             "output_field": null,
             "label_field": null,
-            "jailbreak_field": "Jailbreak Score"
+            "jailbreak_field": "Jailbreak Score",
+            "dataset_name": null
         },
         {
             "dataset_path": "hackaprompt/hackaprompt-dataset",
             "prompt_field": "prompt",
             "output_field": null,
             "label_field": null,
-            "jailbreak_field": "correct"
+            "jailbreak_field": "correct",
+            "dataset_name": null
         }
     ]
 }
