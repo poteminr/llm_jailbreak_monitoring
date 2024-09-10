@@ -7,7 +7,7 @@ from transformers import AutoTokenizer, AutoModelForSequenceClassification
 class BaseGuardModel:
     def __init__(self, model_name: str, device: str = "cpu") -> None:
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
-        self.model = AutoModelForSequenceClassification.from_pretrained(model_name)
+        self.model = AutoModelForSequenceClassification.from_pretrained(model_name).to(device)
         self.device = device
         
     def get_class_probabilities(self, text: str, temperature: float = 1.0):
