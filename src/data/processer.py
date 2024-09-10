@@ -90,10 +90,13 @@ class GitDataProcesser:
         if jailbreak_data:
             data = [
                 {
-                    self._encode_field(k): self._encode_value(v)
-                    for k, v in jailbreak_item.items()
-                    if k in self.jailbreakbench_fields
-                }.update({self.source_field: self.git_url_template.format(repo_path)})
+                    **{
+                        self._encode_field(k): self._encode_value(v)
+                        for k, v in jailbreak_item.items()
+                        if k in self.jailbreakbench_fields
+                    },
+                    self.source_field: self.git_url_template.format(repo_path),
+                }
                 for jailbreak_item in jailbreak_data
             ]
             return data
@@ -127,11 +130,16 @@ class HfDataProcesser:
         self.rubend18 = "rubend18/ChatGPT-Jailbreak-Prompts"
         self.hackaprompt = "hackaprompt/hackaprompt-dataset"
         self.jbb = "JailbreakBench/JBB-Behaviors"
+        self.jackhhao = "jackhhao/jailbreak-classification"
+        self.open_safety = "OpenSafetyLab/Salad-Data"
+        self.open_safety_jaibreak = "attack_enhanced_set"
 
         self.source_field = "source"
-        self.hf_url_template = "https://huggingface.co/datasets/"
+        self.hf_url_template = "https://huggingface.co/datasets/{}"
 
-    def transform_jailbreak_field(self, dataset_path: str, value: Any) -> int:
+    def transform_jailbreak_field(
+        self, dataset_path: str, value: Any, dataset_name: str | None = None
+    ) -> int:
         """
         Check if the value is a jailbreak.
 
@@ -144,10 +152,16 @@ class HfDataProcesser:
             case self.lmsys:
                 return int(value)
             case self.rubend18:
-                return 1
+                return int(value > 0)
             case self.hackaprompt:
                 return int(value)
             case self.jbb:
                 return 1
+            case self.jackhhao:
+                return value == "jailbreak"
+            case self.open_safety:
+                if dataset_name == self.open_safety_jaibreak:
+                    return 1
+                return 0
             case _:
                 raise ValueError(f"Unknown dataset path: {dataset_path}")
