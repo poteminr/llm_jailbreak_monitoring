@@ -6,7 +6,7 @@ import click
 from dotenv import load_dotenv
 from github import Auth, Github
 
-from data.utils import process_dataset
+from utils import clear_dataset, process_dataset
 from processer import GitDataProcesser, NotFoundDataError
 
 
@@ -71,6 +71,7 @@ def collect(output_path: str, local_dataset_path: str, hf_dataset_path: str) -> 
         with open(output_path, "w") as f:
             json.dump({"data": all_data}, f)
 
+    clear_dataset(all_data, [data_processer.input_field, data_processer.target_field])
     process_dataset(all_data, local_dataset_path, hf_dataset_path)
     return None
 
