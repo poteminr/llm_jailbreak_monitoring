@@ -29,7 +29,7 @@ def remove_columns(
     dataset: datasets.Dataset, actual_columns: List[str]
 ) -> datasets.Dataset:
     dataset = dataset.remove_columns(
-        col for col in dataset.column_names if col not in actual_columns
+        [col for col in dataset.column_names if col not in actual_columns]
     )
     return dataset
 
@@ -61,7 +61,10 @@ def clear_dataset(
     :return: Cleaned list of dictionaries.
     """
 
-    data = [{field: item[field]} for field in fields_to_keep for item in data]
+    data = [
+        {field: item[field] for field in fields_to_keep if field in item}
+        for item in data
+    ]
     cleaned_data = []
     seen_prompts = set()
 
