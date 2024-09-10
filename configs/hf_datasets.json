@@ -33,12 +33,20 @@
             "dataset_name": null
         },
         {
-            "dataset_path": "hackaprompt/hackaprompt-dataset",
+            "dataset_path": "JailbreakBench/JBB-Behaviors",
+            "prompt_field": "Goal",
+            "output_field": null,
+            "label_field": null,
+            "jailbreak_field": "Category",
+            "dataset_name": "behaviors"
+        },
+        {
+            "dataset_path": "JailbreakBench/JBB-Behaviors",
             "prompt_field": "prompt",
             "output_field": null,
             "label_field": null,
-            "jailbreak_field": "correct",
-            "dataset_name": null
+            "jailbreak_field": "target_responce",
+            "dataset_name": "judge_comparison"
         }
     ]
 }
