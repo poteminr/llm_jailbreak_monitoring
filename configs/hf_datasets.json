@@ -13,6 +13,27 @@
             "output_field": "chosen",
             "label_field": null,
             "jailbreak_field": null
+        },
+        {
+            "dataset_path": "lmsys/toxic-chat",
+            "prompt_field": "prompt",
+            "output_field": null,
+            "label_field": null,
+            "jailbreak_field": "jailbreaking"
+        },
+        {
+            "dataset_path": "rubend18/ChatGPT-Jailbreak-Prompts",
+            "prompt_field": "prompt",
+            "output_field": null,
+            "label_field": null,
+            "jailbreak_field": "Jailbreak Score"
+        },
+        {
+            "dataset_path": "hackaprompt/hackaprompt-dataset",
+            "prompt_field": "prompt",
+            "output_field": null,
+            "label_field": null,
+            "jailbreak_field": "correct"
         }
     ]
 }
