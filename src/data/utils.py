@@ -15,10 +15,10 @@ def process_dataset(
     :param local_dataset_path: Path to save the local dataset.
     :param hf_dataset_path: Path to push the dataset to Hugging Face.
     """
-    if isinstance(data, list) and all(isinstance(d, datasets.Dataset) for d in data):
-        dataset = datasets.concatenate_datasets(data)
-    elif isinstance(data, list) and all(isinstance(d, dict) for d in data):
+    if isinstance(data, list) and all(isinstance(d, dict) for d in data):
         dataset = datasets.Dataset.from_list(data)
+    else:
+        dataset = datasets.concatenate_datasets(data)
 
     dataset.save_to_disk(local_dataset_path)
     dataset.push_to_hub(repo_id=hf_dataset_path, private=True)
