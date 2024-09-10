@@ -18,9 +18,6 @@ class GitDataProcesser:
         self.jailbreakbench = "JailbreakBench/artifacts"
         self.sherdencooper = "sherdencooper/GPTFuzz"
         self.tml_epfl = "tml-epfl/llm-adaptive-attacks"
-        self.llm_guard = (
-            "protectai/llm-guard/tree/399cb2eea70afc78482db226253ddd1d85f296e3"
-        )
 
         self.input_field = "prompt"
         self.target_field = "jailbreak"
@@ -77,20 +74,6 @@ class GitDataProcesser:
         else:
             raise NotFoundDataError
 
-    def _process_llm_guard_filedata(
-        self, content_file: ContentFile
-    ) -> List[Dict[str, Union[str, bool]]]:
-        data = json.loads(content_file.decoded_content)
-        jailbreak_data = data.get("jailbreak", None)
-        if jailbreak_data:
-            data = [
-                {self.input_field: jailbreak_item, self.target_field: True}
-                for jailbreak_item in jailbreak_data
-            ]
-            return data
-        else:
-            raise NotFoundDataError
-
     def process_filedata(
         self, source_repo: str, content_file: ContentFile
     ) -> List[Dict[str, Union[bool, str]]]:
@@ -110,8 +93,6 @@ class GitDataProcesser:
                 return self._process_sherdencooper_filedata(content_file)
             case self.tml_epfl:
                 return self._process_jailbreakbench_filedata(content_file)
-            case self.llm_guard:
-                return self._process_llm_guard_filedata(content_file)
 
 
 class HfDataProcesser:
