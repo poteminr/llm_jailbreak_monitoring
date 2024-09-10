@@ -62,11 +62,7 @@ def collect(output_path: str, local_dataset_path: str, hf_dataset_path: str) -> 
             data_chunk = collect_recursively_from_github(
                 g, git_repo["repo_path"], git_repo["initial_path"], data_processer
             )
-
-            def verify_item(item: Dict[str, Union[str, bool]]) -> bool:
-                return bool(item.get("prompt")) and item["jailbreak"]
-
-            all_data.extend([item for item in data_chunk if verify_item(item)])
+            all_data.extend([item for item in data_chunk if item])
 
         with open(output_path, "w") as f:
             json.dump({"data": all_data}, f)
