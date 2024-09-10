@@ -21,6 +21,8 @@ class GitDataProcesser:
 
         self.input_field = "prompt"
         self.target_field = "jailbreak"
+        self.source_field = "source"
+        self.git_url_template = "https://github.com/{}"
 
         self.verazuo_fields = ["prompt", "jailbreak"]
         self.jailbreakbench_fields = ["prompt", "jailbroken"]
@@ -33,7 +35,7 @@ class GitDataProcesser:
 
     def _encode_value(self, value: Union[str, bool]) -> Union[str, int]:
         if isinstance(value, bool):
-            return int(value)
+            return 1
         return value
 
     def _process_sherdencooper_filedata(
@@ -45,6 +47,9 @@ class GitDataProcesser:
         df = df.drop(self.sherdencooper_field, axis=1)
         if "id" in df.columns:
             df = df.drop(["id"], axis=1)
+        df[self.source_field] = df.shape[0] * [
+            self.git_url_template.format(self.sherdencooper)
+        ]
         return df.to_dict(orient="records")
 
     def _process_verazuo_filedata(
@@ -62,10 +67,23 @@ class GitDataProcesser:
                 print(f"Failed to download the file: {response.status_code}")
         df = df[self.verazuo_fields]
         df[self.target_field] = df[self.target_field].astype(int)
+        df[self.source_field] = df.shape[0] * [
+            self.git_url_template.format(self.verazuo)
+        ]
         return df.to_dict(orient="records")
 
     def _process_jailbreakbench_filedata(
         self, content_file: ContentFile
+    ) -> List[Dict[str, Union[str, bool]]]:
+        return self._process_json_filedata(content_file, self.jailbreakbench)
+
+    def _process_tml_epfl_filedata(
+        self, content_file: ContentFile
+    ) -> List[Dict[str, Union[str, bool]]]:
+        return self._process_json_filedata(content_file, self.tml_epfl)
+
+    def _process_json_filedata(
+        self, content_file: ContentFile, repo_path: str
     ) -> List[Dict[str, Union[str, bool]]]:
         data = json.loads(content_file.decoded_content)
         jailbreak_data = data.get("jailbreaks", None)
@@ -75,7 +93,7 @@ class GitDataProcesser:
                     self._encode_field(k): self._encode_value(v)
                     for k, v in jailbreak_item.items()
                     if k in self.jailbreakbench_fields
-                }
+                }.update({self.source_field: self.git_url_template.format(repo_path)})
                 for jailbreak_item in jailbreak_data
             ]
             return data
@@ -100,7 +118,7 @@ class GitDataProcesser:
             case self.sherdencooper:
                 return self._process_sherdencooper_filedata(content_file)
             case self.tml_epfl:
-                return self._process_jailbreakbench_filedata(content_file)
+                return self._process_tml_epfl_filedata(content_file)
 
 
 class HfDataProcesser:
@@ -108,6 +126,10 @@ class HfDataProcesser:
         self.lmsys = "lmsys/toxic-chat"
         self.rubend18 = "rubend18/ChatGPT-Jailbreak-Prompts"
         self.hackaprompt = "hackaprompt/hackaprompt-dataset"
+        self.jbb = "JailbreakBench/JBB-Behaviors"
+
+        self.source_field = "source"
+        self.hf_url_template = "https://huggingface.co/datasets/"
 
     def transform_jailbreak_field(self, dataset_path: str, value: Any) -> int:
         """
@@ -122,8 +144,10 @@ class HfDataProcesser:
             case self.lmsys:
                 return int(value)
             case self.rubend18:
-                return int(value > 0)
+                return 1
             case self.hackaprompt:
                 return int(value)
+            case self.jbb:
+                return 1
             case _:
                 raise ValueError(f"Unknown dataset path: {dataset_path}")
