@@ -86,6 +86,24 @@ class GitDataProcesser:
         self, content_file: ContentFile, repo_path: str
     ) -> List[Dict[str, Union[str, bool]]]:
         data = json.loads(content_file.decoded_content)
+        metadata = data.get("parameters", None)
+        prompt_template = None
+        if metadata:
+            method_params = metadata.get("method_parameters", None)
+            if method_params:
+                prompt_template = method_params.get("prompt_template", None)
+
+        if prompt_template:
+            prompt_template = prompt_template.replace("[INSERT PROMPT HERE]", "")
+            data = [
+                {
+                    self.input_field: prompt_template,
+                    self.target_field: 1,
+                    self.source_field: self.git_url_template.format(repo_path),
+                }
+            ]
+            return data
+
         jailbreak_data = data.get("jailbreaks", None)
         if jailbreak_data:
             data = [
