@@ -64,10 +64,18 @@ def collect(output_path: str, local_dataset_path: str, hf_dataset_path: str) -> 
             )
             all_data.extend([item for item in data_chunk if item])
 
-        with open(output_path, "w") as f:
-            json.dump({"data": all_data}, f)
+    all_data = clear_dataset(
+        all_data,
+        [
+            data_processer.input_field,
+            data_processer.target_field,
+            data_processer.source_field,
+        ],
+    )
 
-    clear_dataset(all_data, [data_processer.input_field, data_processer.target_field])
+    with open(output_path, "w") as f:
+        json.dump({"data": all_data}, f)
+
     process_dataset(all_data, local_dataset_path, hf_dataset_path)
     return None
 
