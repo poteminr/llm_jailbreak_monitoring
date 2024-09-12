@@ -1,15 +1,25 @@
-from typing import Optional
+from typing import Optional, Literal
 import ollama
+import torch
 from transformers import DistilBertTokenizer
-from toxic_classifier import ToxicLLMClassifier
+from detectors.output_checker.toxic_classifier import ToxicClassifier
 
 
 class OutputDetector:
-    def __init__(self, llm_guard_model_name: str = "xe/llamaguard3", encoder_model_name: str = "nikiduki/ToxicLLMClassifier", tokenizer_name: str = "distilbert-base-uncased", device: str = "cuda") -> None:
+    def __init__(
+        self,
+        llm_guard_model_name: str = "xe/llamaguard3",
+        encoder_model_name: str = "nikiduki/ToxicLLMClassifier",
+        tokenizer_name: str = "distilbert-base-uncased",
+        guard_model_type: Literal['llm', 'encoder'] = 'llm',
+        device: str = "cpu"
+    ) -> None:
         self.llm_guard_model_name = llm_guard_model_name
         self.device = device
-        self.encoder_model = ToxicLLMClassifier.from_pretrained(self.encoder_model_name).to(self.device),
-        self.tokenizer = DistilBertTokenizer.from_pretrained(self.tokenizer_name, clean_up_tokenization_spaces=True),
+        
+        if guard_model_type == 'encoder':
+            self.encoder_model = ToxicClassifier.from_pretrained(encoder_model_name).to(self.device),
+            self.tokenizer = DistilBertTokenizer.from_pretrained(tokenizer_name, clean_up_tokenization_spaces=True)
     
     def _generate(self, prompt: str, system: str = "") -> str:
         return ollama.generate(self.llm_guard_model_name, prompt=prompt, system=system)['response']
@@ -26,7 +36,6 @@ class OutputDetector:
             return_attention_mask=True,
             return_tensors='pt',
         )
-
         input_ids = encoding['input_ids'].to(self.device)
         attention_mask = encoding['attention_mask'].to(self.device)
     
@@ -69,13 +78,27 @@ class OutputDetector:
 class OutputChecker:
     def __init__(
         self,
-        output_detector: Optional[OutputDetector] = None
+        output_detector: Optional[OutputDetector] = None,
+        guard_model_type: Literal['llm', 'encoder'] = 'llm',
+        device: str = 'cpu'
     ) -> None:
-        self.output_detector = output_detector if output_detector is not None else OutputDetector()
-    
+        self.output_detector = output_detector if output_detector is not None else OutputDetector(
+            guard_model_type=guard_model_type,
+            device=device
+        )
+        self.guard_model_type = guard_model_type
+        
     def get_llm_guard_model_label(self, input_text: str) -> tuple[Optional[str], bool]:
         llm_guard_model_prediction = self.output_detector.get_llm_guard_model_prediction(input_text)
         return llm_guard_model_prediction['category'], llm_guard_model_prediction['label']
 
+    def get_encoder_model_label(self, input_text: str) -> tuple[Optional[str], bool]:
+        encoder_model_prediction = self.output_detector.get_encoder_model_prediction(input_text)
+        return encoder_model_prediction['category'], encoder_model_prediction['label']
+
     def check_output(self, input_text: str) -> tuple[Optional[str], bool]:
-        return self.get_llm_guard_model_label(input_text)
+        if self.guard_model_type == 'llm':
+            return self.get_llm_guard_model_label(input_text)
+        elif self.guard_model_type == 'encoder':
+            return self.get_encoder_model_label(input_text)
+        

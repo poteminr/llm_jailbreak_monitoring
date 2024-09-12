@@ -8,10 +8,11 @@ class Detector:
     def __init__(
         self,
         input_checker: Optional[InputChecker] = None,
-        output_checker: Optional[OutputChecker] = None
+        output_checker: Optional[OutputChecker] = None,
+        device: str = 'cpu'
     ) -> None:
-        self.input_checker = input_checker if input_checker is not None else InputChecker()
-        self.output_checker = output_checker if output_checker is not None else OutputChecker()
+        self.input_checker = input_checker if input_checker is not None else InputChecker(device=device)
+        self.output_checker = output_checker if output_checker is not None else OutputChecker(device=device)
     
     @staticmethod
     def pack_input_check_results(
