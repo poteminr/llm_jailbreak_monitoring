@@ -4,12 +4,14 @@ from transformers import DistilBertModel
 from huggingface_hub import PyTorchModelHubMixin
 
 
-class ToxicLLMClassifier(nn.Module, 
-                         PyTorchModelHubMixin, 
-                         repo_url="toxic_llm_classifier",
-                         pipeline_tag="text_classifier",
-                         license="mit"):
-    def __init__(self, n_classes):
+class ToxicLLMClassifier(
+    nn.Module, 
+    PyTorchModelHubMixin, 
+    repo_url="toxic_llm_classifier",
+    pipeline_tag="text_classifier",
+    license="mit"
+):
+    def __init__(self, n_classes: int = 2):
         super(ToxicLLMClassifier, self).__init__()
         self.encoder = DistilBertModel.from_pretrained("distilbert-base-uncased")
         self.dropout = nn.Dropout(0.3)
