@@ -3,6 +3,8 @@ import ollama
 from detectors.input_checker.utils import LLM_GUARD_MODEL_PROMPT
 from detectors.input_checker.base_guard_model import BaseGuardModel
 
+from vector_search.injection_finder import InjectionFinder
+
 
 class InputDetector:
     def __init__(
@@ -34,7 +36,9 @@ class InputChecker:
     def __init__(
         self,
         input_detector: Optional[InputDetector] = None,
-        find_sim_injection: Optional[Callable[[str, int], tuple[list[str], list[float]]]] = None,
+        injection_finder: Optional[InjectionFinder] = None,
+        injection_finder_model_name: Optional[str] = None,
+        injection_finder_embeddings_path: Optional[str] = None,
         base_guard_model_name: Optional[str] = None,
         llm_guard_model_name: Optional[str] = None,
         base_guard_model_score_threshold: float = 0.75,
@@ -43,8 +47,15 @@ class InputChecker:
         policy: Literal["simple", 'base', 'hard'] = 'base',
         device: str = 'cpu'
     ) -> None:
-        self.find_sim_injection = find_sim_injection
-    
+        if injection_finder_model_name is not None and injection_finder_embeddings_path is not None:
+            self.injection_finder = InjectionFinder(
+                model_name_or_path=injection_finder_model_name,
+                path_to_embeddings=injection_finder_embeddings_path,
+                device=device
+            )
+        else:
+            self.injection_finder = injection_finder if injection_finder is not None else InjectionFinder(device=device)
+            
         if base_guard_model_name is not None and llm_guard_model_name is not None:
             self.input_detector = InputDetector(base_guard_model_name, llm_guard_model_name, device=device)
         else:
@@ -72,7 +83,7 @@ class InputChecker:
         input_text: str,
         top_k: int = 1
     ) -> tuple[float, bool, tuple[list[str], list[float]]]:
-        search_results = self.find_sim_injection(input_text, top_k)
+        search_results = self.injection_finder.find_sim_injection(input_text, top_k)
         score = max(search_results[1])
         label = (score > self.injection_search_similarity_threshold)
         return score, label, search_results
@@ -92,7 +103,7 @@ class InputChecker:
         
     def _check_input_one_sample(self, input_text: str, top_k: int = 1) -> tuple[float, bool]:
         base_guard_model_label = self.get_base_guard_model_label(input_text)
-        if self.policy == 'simple' or base_guard_model_label[1] or self.find_sim_injection is None:
+        if self.policy == 'simple' or base_guard_model_label[1]:
             return base_guard_model_label
         
         search_similarity_label = self.get_search_similarity_label(input_text, top_k)

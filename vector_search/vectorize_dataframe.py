@@ -22,4 +22,4 @@ def vectorize_dataframe(
     
     vectorized_dataframe = pd.DataFrame(columns=["embedding"])
     vectorized_dataframe["embedding"] = embedding_model.encode(dataframe[column_name]).tolist()
-    return vectorized_data
+    return vectorized_dataframe
