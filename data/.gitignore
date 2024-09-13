@@ -89,3 +89,6 @@ target/
 
 # pytest cache
 .pytest_cache/
+
+# local data storage
+datasets/*

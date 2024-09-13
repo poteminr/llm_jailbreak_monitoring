@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 import requests
 import tqdm
 
-from data.utils import process_dataset
+from src.utils import process_dataset
 
 
 class LlmApi:
