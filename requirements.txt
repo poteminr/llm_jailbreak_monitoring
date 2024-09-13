@@ -1,6 +1,7 @@
 sentence_transformers
 torch
 numpy
+pandas
 faiss
 ollama
 torch
