@@ -5,54 +5,50 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 from sqlalchemy import Column, Integer, String, DateTime, Text, Float
 from datetime import datetime
 from enum import Enum
-
-DATABASE_URL = "postgresql+asyncpg://username:password@db:5432/mydatabase"
-
-engine = create_async_engine(DATABASE_URL, echo=True)
-async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
-
-Base = declarative_base()
-
-class Prompt(Base):
-    __tablename__ = "prompts"
-
-    id = Column(Integer, primary_key=True, index=True)
-    prompt = Column(Text, nullable=False)
-    categorised_as = Column(String, nullable=False)
-    generation = Column(Text, nullable=True)
-    score = Column(Float, nullable=True)
-    timestamp = Column(DateTime, default=datetime.utcnow)
-    response_refused = Column(String, nullable=True)
-
-class CategorisedAs(str, Enum):
-    injection = "injection"
-    unsafe = "unsafe"
-    jailbreak = "jailbreak"
-    toxic = "toxic"
-
-class PromptInput(BaseModel):
-    prompt: str
-    categorised_as: CategorisedAs = Field(..., description="Возможные значения: injection, unsafe, jailbreak, toxic")
-    generation: str = None
-    score: float = None
-    response_refused: str = None
+from models import PromptInput, Prompt, PromptInputModel
+from models import engine, Base, async_session
+from detector import Detector
 
 app = FastAPI()
+detector = Detector()
+
 
 @app.on_event("startup")
 async def create_db():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
+
 @app.post("/api/prompts/")
-async def track_prompt(prompt_data: PromptInput):
+async def track_prompt(prompt_data: str):
+    print("Main part")
+
+    result = detector.check_input(prompt_data)
+
+    print(f"{result = }")
+
+    '''
+        results = {
+            "input_text": input_text,
+            "input_score": input_check_results[0],
+            "is_input_jailbreak": input_check_results[1]
+        }
+        
+    prompt: str
+    categorised_as: CategorisedAs = Field(..., description="Возможные значения: injection, unsafe, jailbreak, toxic")
+    generation: str = None
+    score: float = None
+    response_refused: str = None
+
+    '''
+
     async with async_session() as session:
-        new_prompt = Prompt(
-            prompt=prompt_data.prompt,
-            categorised_as=prompt_data.categorised_as,
-            generation=prompt_data.generation,
-            score=prompt_data.score,
-            response_refused=prompt_data.response_refused
+        new_prompt = PromptInputModel(
+            prompt=prompt_data,
+            categorised_as='jailbreak' if result['is_input_jailbreak'] else 'regular_text',
+            generation='', # TODO
+            score=result['input_score'],
+            response_refused=result['is_input_jailbreak']
         )
         session.add(new_prompt)
         await session.commit()

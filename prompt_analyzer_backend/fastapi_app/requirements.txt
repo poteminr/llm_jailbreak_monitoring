@@ -2,3 +2,10 @@ fastapi
 uvicorn
 asyncpg
 sqlalchemy
+ollama
+sentence_transformers
+torch
+numpy
+pandas
+transformers
+faiss-cpu

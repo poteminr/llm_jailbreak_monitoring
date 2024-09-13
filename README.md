@@ -18,7 +18,7 @@
 ## Ml block
 Пример использования ML-блока.
 ```python
-from ml.detector import Detector
+from detector import Detector
 detector = Detector()
 
 # обработка сообщений пользователя и ответа LLM
@@ -34,13 +34,13 @@ detector_result = detector.check_model_artefacts(input_text, output)
 
 Доступна более тонкая настройка:
 ```python
-from ml.detector import Detector
-from ml.detectors.input_checker.checker import InputChecker
-from ml.detectors.output_checker.checker import OutputChecker
+from detector import Detector
+from detectors.input_checker.checker import InputChecker
+from detectors.output_checker.checker import OutputChecker
 
 # обязательно указывается путь на векторную базу промпт-инъкций 
 input_checker = InputChecker(
-    injection_finder_embeddings_path='jailbreak_prompts_embeds.pkl',
+    injection_finder_embeddings_path="/app/vector_search/jailbreak_prompts_embeds.pkl",
     base_guard_model_scores_spread_threshold=0.4,
     policy='simple'
 )
