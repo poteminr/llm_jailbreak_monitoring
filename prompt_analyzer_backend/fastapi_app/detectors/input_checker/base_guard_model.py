@@ -126,13 +126,13 @@ class BaseGuardModel:
         if not isinstance(text, str):
             return self.get_prompt_scores_batched(text)
         
-        original_score = self.get_indirect_injection_score(text)
-        preprocessed_text_score = self.get_indirect_injection_score(self.preprocess_text_for_promptguard(text)) 
+        original_score = self.get_jailbreak_score(text)
+        preprocessed_text_score = self.get_jailbreak_score(self.preprocess_text_for_promptguard(text)) 
         return original_score, preprocessed_text_score
     
     def get_prompt_scores_batched(self, texts: list[str]) -> tuple[list[float], list[float]]:
-        original_scores = self.get_indirect_injection_score(texts)
+        original_scores = self.get_jailbreak_score(texts)
         preprocessed_text = [self.preprocess_text_for_promptguard(text) for text in texts]
-        preprocessed_text_scores = self.get_indirect_injection_score(preprocessed_text)
+        preprocessed_text_scores = self.get_jailbreak_score(preprocessed_text)
         return original_scores, preprocessed_text_scores
         

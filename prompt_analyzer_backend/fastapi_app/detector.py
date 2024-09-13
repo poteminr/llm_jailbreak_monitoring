@@ -2,8 +2,6 @@ from typing import Optional, Union, Literal
 
 from detectors.input_checker.checker import InputChecker
 from detectors.output_checker.checker import OutputChecker
-from models import Prompt
-
 
 class Detector:
     def __init__(
@@ -64,7 +62,6 @@ class Detector:
             "output_label": output_check_results[0],
             "is_unsafe": output_check_results[1]
         }
-        asyncio.run(add_to_db(results))
         return results
         
     def check_model_artefacts(
@@ -75,16 +72,3 @@ class Detector:
         input_check_results = self.input_checker.check_input(input_text)
         output_check_results = self.output_checker.check_output(generated_text)
         return self.pack_results(input_text, generated_text, input_check_results, output_check_results)
-
-async def add_to_db(results: dict):
-    async with async_session() as session:
-        new_result = Prompt(
-            input_text=results["input_text"],
-            input_score=results["input_score"],
-            is_input_jailbreak=results["is_input_jailbreak"],
-            generated_text=results["generated_text"],
-            output_label=results["output_label"],
-            is_unsafe=results["is_unsafe"]
-        )
-        session.add(new_result)
-        await session.commit()

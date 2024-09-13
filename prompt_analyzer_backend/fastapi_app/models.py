@@ -31,11 +31,13 @@ class PromptInputModel(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     prompt = Column(String, nullable=False)
-    categorised_as = Column(String, nullable=False)  # Adjust type and constraints as needed
+    categorised_as = Column(String, nullable=False)
     generation = Column(String)
     score = Column(Float)
     response_refused = Column(Boolean)
     timestamp = Column(DateTime, default=datetime.utcnow)
+    output_label = Column(String, nullable=False)
+    is_unsafe = Column(Boolean)
 
 class PromptInput(BaseModel):
     prompt: str
