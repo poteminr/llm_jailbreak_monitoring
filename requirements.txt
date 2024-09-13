@@ -1,0 +1,7 @@
+sentence_transformers
+torch
+numpy
+faiss
+ollama
+torch
+transformers
