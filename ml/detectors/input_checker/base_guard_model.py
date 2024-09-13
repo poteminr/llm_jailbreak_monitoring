@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import Union
 import torch
 from torch.nn.functional import softmax
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
