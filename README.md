@@ -61,7 +61,14 @@ detector_result = detector.check_model_artefacts(input_text, output)
 | Модель                               | Этап                                        | Требования |
 |--------------------------------------|---------------------------------------------|------------|
 | meta-llama/Prompt-Guard-86M          | Детекция входа                              |            |
+| llama3.1                             | Детекция входа (не используется)            | ollama     |
 | intfloat/multilingual-e5-large       | Эмбедер для векторного поиска в БД инъекций |            |
 | poteminr/toxic_generation_classifier | Детекция выхода (параметр encoder)          |            |
 | xe/llamaguard3                       | Детекция выхода (параметр llm)              | ollama     |
 
+### Метрики
+| Этап   | Основа детектора                     | Метрика             | Статус              |
+|--------|--------------------------------------|---------------------|---------------------|
+| input  | meta-llama/Prompt-Guard-86M          | tbd                 | Используется        |
+| output | poteminr/toxic_generation_classifier | 0.84 F1 (toxic = 1) | Используется        |
+| output | xe/llamaguard3 (ollama)              | 0.79 F1 (toxic = 1) | Доступна для выбора |
