@@ -1,7 +1,6 @@
 from typing import Optional, Literal
 import ollama
-import torch
-from transformers import pipeline, AutoModelForSequenceClassification
+from transformers import pipeline
 
 
 class OutputDetector:
