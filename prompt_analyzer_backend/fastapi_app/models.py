@@ -26,13 +26,6 @@ class Prompt(Base):
     timestamp = Column(DateTime, default=datetime.utcnow)
     response_refused = Column(String, nullable=True)
 
-
-class CategorisedAs(str, Enum):
-    injection = "injection"
-    unsafe = "unsafe"
-    jailbreak = "jailbreak"
-    toxic = "toxic"
-
 class PromptInputModel(Base):
     __tablename__ = 'prompts'
 

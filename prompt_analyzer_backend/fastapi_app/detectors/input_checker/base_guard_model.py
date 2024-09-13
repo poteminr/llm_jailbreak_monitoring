@@ -2,9 +2,12 @@ from typing import Union
 import torch
 from torch.nn.functional import softmax
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
+from dotenv import load_dotenv
 from huggingface_hub import login
+import os
 
-login(token = "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")
+load_dotenv()
+login(token = os.getenv('TOKEN'))
 
 
 class BaseGuardModel:

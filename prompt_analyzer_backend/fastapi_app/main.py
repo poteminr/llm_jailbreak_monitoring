@@ -21,26 +21,7 @@ async def create_db():
 
 @app.post("/api/prompts/")
 async def track_prompt(prompt_data: str):
-    print("Main part")
-
     result = detector.check_input(prompt_data)
-
-    print(f"{result = }")
-
-    '''
-        results = {
-            "input_text": input_text,
-            "input_score": input_check_results[0],
-            "is_input_jailbreak": input_check_results[1]
-        }
-        
-    prompt: str
-    categorised_as: CategorisedAs = Field(..., description="Возможные значения: injection, unsafe, jailbreak, toxic")
-    generation: str = None
-    score: float = None
-    response_refused: str = None
-
-    '''
 
     async with async_session() as session:
         new_prompt = PromptInputModel(

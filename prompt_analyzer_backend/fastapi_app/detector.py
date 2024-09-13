@@ -3,9 +3,7 @@ from typing import Optional, Union, Literal
 from detectors.input_checker.checker import InputChecker
 from detectors.output_checker.checker import OutputChecker
 from models import Prompt
-# import logging
 
-print("2!!!!")
 
 class Detector:
     def __init__(
@@ -15,7 +13,6 @@ class Detector:
         output_guard_model_type: Literal['llm', 'encoder'] = 'encoder',
         device: str = 'cpu'
     ) -> None:
-        print("!!!!")
         self.input_checker = input_checker if input_checker is not None else InputChecker(device=device)
         self.output_checker = output_checker if output_checker is not None else OutputChecker(
             guard_model_type=output_guard_model_type,
