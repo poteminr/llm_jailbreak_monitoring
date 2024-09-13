@@ -1,9 +1,9 @@
 from typing import Literal, Optional, Union
 import ollama
-from detectors.input_checker.utils import LLM_GUARD_MODEL_PROMPT
-from detectors.input_checker.base_guard_model import BaseGuardModel
+from ml.detectors.input_checker.utils import LLM_GUARD_MODEL_PROMPT
+from ml.detectors.input_checker.base_guard_model import BaseGuardModel
 
-from vector_search.injection_finder import InjectionFinder
+from ml.vector_search.injection_finder import InjectionFinder
 
 
 class InputDetector:
@@ -37,7 +37,7 @@ class InputChecker:
         self,
         input_detector: Optional[InputDetector] = None,
         injection_finder: Optional[InjectionFinder] = None,
-        injection_finder_model_name: Optional[str] = None,
+        injection_finder_model_name: str = "intfloat/multilingual-e5-large",
         injection_finder_embeddings_path: Optional[str] = None,
         base_guard_model_name: Optional[str] = None,
         llm_guard_model_name: Optional[str] = None,
@@ -47,7 +47,7 @@ class InputChecker:
         policy: Literal["simple", 'base', 'hard'] = 'base',
         device: str = 'cpu'
     ) -> None:
-        if injection_finder_model_name is not None and injection_finder_embeddings_path is not None:
+        if injection_finder_embeddings_path is not None:
             self.injection_finder = InjectionFinder(
                 model_name_or_path=injection_finder_model_name,
                 path_to_embeddings=injection_finder_embeddings_path,
