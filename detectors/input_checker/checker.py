@@ -1,4 +1,4 @@
-from typing import Callable, Literal, Optional, Union
+from typing import Literal, Optional, Union
 import ollama
 from detectors.input_checker.utils import LLM_GUARD_MODEL_PROMPT
 from detectors.input_checker.base_guard_model import BaseGuardModel
