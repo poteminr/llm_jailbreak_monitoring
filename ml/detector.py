@@ -1,7 +1,7 @@
-from typing import Optional, Union
+from typing import Optional, Union, Literal
 
-from detectors.input_checker.checker import InputChecker
-from detectors.output_checker.checker import OutputChecker
+from ml.detectors.input_checker.checker import InputChecker
+from ml.detectors.output_checker.checker import OutputChecker
 
 
 class Detector:
@@ -9,10 +9,14 @@ class Detector:
         self,
         input_checker: Optional[InputChecker] = None,
         output_checker: Optional[OutputChecker] = None,
+        output_guard_model_type: Literal['llm', 'encoder'] = 'encoder',
         device: str = 'cpu'
     ) -> None:
         self.input_checker = input_checker if input_checker is not None else InputChecker(device=device)
-        self.output_checker = output_checker if output_checker is not None else OutputChecker(device=device)
+        self.output_checker = output_checker if output_checker is not None else OutputChecker(
+            guard_model_type=output_guard_model_type,
+            device=device
+        )
     
     @staticmethod
     def pack_input_check_results(
