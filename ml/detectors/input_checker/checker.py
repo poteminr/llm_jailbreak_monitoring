@@ -1,7 +1,7 @@
 from typing import Literal, Optional, Union
 import ollama
 from ml.detectors.input_checker.utils import LLM_GUARD_MODEL_PROMPT
-from ml.detectors.input_checker.base_guard_model import BaseGuardModel
+from ml.detectors.input_checker.base_guard_model import BaseGuardModel, PGuardModel
 
 from ml.vector_search.injection_finder import InjectionFinder
 
@@ -9,14 +9,30 @@ from ml.vector_search.injection_finder import InjectionFinder
 class InputDetector:
     def __init__(
         self,
-        base_guard_model_name: str = "meta-llama/Prompt-Guard-86M",
+        base_guard_model_name: Literal['meta-llama', 'poteminr'] = "poteminr",
         llm_guard_model_name: str = "llama3.1",
         llm_guard_model_prompt_template: str = LLM_GUARD_MODEL_PROMPT,
         device: str = "cpu"
     ) -> None:
-        self.base_guard_model = BaseGuardModel(base_guard_model_name, device)
+        self.base_guard_model_name = self.map_model_name_to_path(base_guard_model_name)
+        
+        if self.base_guard_model_name == self.map_model_name_to_path("poteminr"):
+            self.base_guard_model = PGuardModel(self.base_guard_model_name, device)
+        else:
+            self.base_guard_model = BaseGuardModel(self.base_guard_model_name, device)
+        
         self.llm_guard_model_name = llm_guard_model_name
         self.llm_guard_model_prompt_template = llm_guard_model_prompt_template
+    
+    @staticmethod
+    def map_model_name_to_path(model_name: str) -> Optional[str]:
+        if model_name == "meta-llama":
+            return "meta-llama/Prompt-Guard-86M"
+        elif model_name == "poteminr":
+            return "poteminr/jailbreak_detector_v2"
+           
+    def get_p_guard_model_prediction(self, input_text: str) -> dict[str, Union[str, float]]:
+        return self.base_guard_model.get_prompt_scores(input_text)
     
     def get_base_guard_model_score(self, input_text: str) -> tuple[float, float]:
         return self.base_guard_model.get_prompt_scores(input_text)
@@ -39,12 +55,12 @@ class InputChecker:
         injection_finder: Optional[InjectionFinder] = None,
         injection_finder_model_name: str = "intfloat/multilingual-e5-large",
         injection_finder_embeddings_path: Optional[str] = None,
-        base_guard_model_name: Optional[str] = None,
+        base_guard_model_name: Optional[Literal['meta-llama', 'poteminr']] = None,
         llm_guard_model_name: Optional[str] = None,
         base_guard_model_score_threshold: float = 0.75,
         base_guard_model_scores_spread_threshold: float = 0.5,
         injection_search_similarity_threshold: float = 0.8,
-        policy: Literal["simple", 'base', 'hard'] = 'base',
+        policy: Literal["simple", 'base', 'hard'] = 'simple',
         device: str = 'cpu'
     ) -> None:
         if injection_finder_embeddings_path is not None:
@@ -55,7 +71,7 @@ class InputChecker:
             )
         else:
             self.injection_finder = injection_finder if injection_finder is not None else InjectionFinder(device=device)
-            
+        
         if base_guard_model_name is not None and llm_guard_model_name is not None:
             self.input_detector = InputDetector(base_guard_model_name, llm_guard_model_name, device=device)
         else:
@@ -67,6 +83,13 @@ class InputChecker:
         self.policy = policy
         
     def get_base_guard_model_label(self, input_text: str) -> tuple[float, bool]:
+        if self.input_detector.base_guard_model_name == self.input_detector.map_model_name_to_path("poteminr"):
+            prediction = self.input_detector.get_p_guard_model_prediction(input_text)
+            if prediction['label'] == "SAFE":
+                return 0.0, False
+            elif prediction['label'] == "INJECTION":
+                return 1.0, True
+
         original_score, preprocessed_text_score = self.input_detector.get_base_guard_model_score(input_text)
         max_score = max(original_score, preprocessed_text_score)
         scores_spread = abs(preprocessed_text_score - original_score)

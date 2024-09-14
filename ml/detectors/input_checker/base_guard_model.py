@@ -1,9 +1,28 @@
 from typing import Union
 import torch
 from torch.nn.functional import softmax
-from transformers import AutoTokenizer, AutoModelForSequenceClassification
+from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline
 
 
+class PGuardModel:
+    def __init__(self, model_name: str = "poteminr/jailbreak_detector_v2", device: str = "cpu") -> None:
+        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+        self.model = AutoModelForSequenceClassification.from_pretrained(model_name).to(device)
+        self.device = device
+    
+        self.classifier = pipeline(
+            "text-classification",
+            model=self.model,
+            tokenizer=self.tokenizer,
+            truncation=True,
+            max_length=512,
+            device=self.device
+        )
+    
+    def get_prompt_scores(self, text: str) -> dict[str, Union[str, float]]:
+        return self.classifier(text)[0]
+        
+        
 class BaseGuardModel:
     def __init__(self, model_name: str = "meta-llama/Prompt-Guard-86M", device: str = "cpu") -> None:
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
