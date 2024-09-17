@@ -59,8 +59,8 @@ class InputChecker:
         llm_guard_model_name: Optional[str] = None,
         base_guard_model_score_threshold: float = 0.75,
         base_guard_model_scores_spread_threshold: float = 0.5,
-        injection_search_similarity_threshold: float = 0.8,
-        policy: Literal["simple", 'base', 'hard'] = 'simple',
+        injection_search_similarity_threshold: float = 0.95,
+        policy: Literal["simple", 'base', 'hard'] = 'base',
         device: str = 'cpu'
     ) -> None:
         if injection_finder_embeddings_path is not None:
