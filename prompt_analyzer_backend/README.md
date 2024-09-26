@@ -1,3 +1,14 @@
+To run locally use two commands:
+
+```
+make build
+```
+and after it
+```
+make run
+```
+
+
 # Grafana metrics
 
 ```
