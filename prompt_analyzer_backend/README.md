@@ -8,6 +8,11 @@ and after it
 make run
 ```
 
+after it go to swagger with all endpoints of API
+
+```
+localhost:8000/docs#
+```
 
 # Grafana metrics
 
